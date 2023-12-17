@@ -4,52 +4,69 @@ import (
     // "fmt"
     "strconv"
     "gofr.dev/pkg/gofr"
+    "strings"
 )
 
-type Customer struct {
+type album struct {
     ID   int    `json:"id"`
-    Name string `json:"name"`
-    // Address string `json:"address"`
-
+    Title string `json:"title"`
+    Artist string `json:"artist"`
+    Price int `json:"price"`
 }
-func post(ctx *gofr.Context) (interface{}, error){
-    name := ctx.PathParam("name")
-
-        // Inserting a customer row in database using SQL
-        _, err := ctx.DB().ExecContext(ctx, "INSERT INTO customers (name) VALUES (?)", name)
-
-        return nil, err
+func adduser(ctx *gofr.Context) (interface{},error){
+    data := ctx.PathParam("data")
+    data1:=strings.Split(data,",")
+    i:=data1[0]
+    t:=data1[1]
+    a:=data1[2]
+    p:=data1[3]
+    i1,err1:=strconv.Atoi(i)
+    p1,err2:=strconv.Atoi(p)
+    
+        _, err := ctx.DB().ExecContext(ctx, "INSERT IGNORE INTO album (id,title,artist,price) VALUES (?,?,?,?)", i1,t,a,p1)
+       
+        if err1 != nil {
+            return nil, err 
+        }
+        if err2 != nil {
+            return nil, err 
+        }
+        
+        return nil,err
 }
-func deleteCustomerById(ctx *gofr.Context) (interface{}, error){
+func deleteAlbumById(ctx *gofr.Context) (interface{}, error){
     id := ctx.PathParam("id")
     i ,err:=strconv.Atoi(id)
     if err != nil {
-            return nil, err
+            return nil, err 
         }
-        // Inserting a customer row in database using SQL
-        _, err1 := ctx.DB().ExecContext(ctx, "DELETE FROM customers WHERE Id=(?)",i)
+    
+        _, err1 := ctx.DB().ExecContext(ctx, "DELETE FROM album WHERE Id=(?)",i)
 
         return nil, err1
 }
-func getCustomerBYId(ctx *gofr.Context) (interface{}, error){
+func getAlbumById(ctx *gofr.Context) (interface{}, error){
     id := ctx.PathParam("id")
     i,err :=strconv.Atoi(id)
-    var customers[] Customer
-    var ans Customer
-        // Getting the customer from the database using SQL
-        rows, err := ctx.DB().QueryContext(ctx, "SELECT * FROM customers")
-        if err != nil {
-            return nil, err
+    if err != nil {
+            return nil, err 
+    }
+    var albums[] album
+    var ans album
+    
+        rows, err1 := ctx.DB().QueryContext(ctx, "SELECT * FROM album")
+        if err1 != nil {
+            return nil, err1
         }
 
         for rows.Next() {
-            var customer Customer
-            if err := rows.Scan(&customer.ID, &customer.Name); err != nil {
-                return nil, err
+            var alb album
+            if err1 := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err != nil {
+                return nil, err1
             }
-            customers=append(customers,customer)
+            albums=append(albums,alb)
         }
-        for _,a := range customers{
+        for _,a := range albums{
             if a.ID==i{
                 ans=a
             }
@@ -57,67 +74,36 @@ func getCustomerBYId(ctx *gofr.Context) (interface{}, error){
         return ans,nil
 
 }
-func get(ctx *gofr.Context) (interface{}, error){
-    var customers []Customer
-        // Getting the customer from the database using SQL
-        rows, err := ctx.DB().QueryContext(ctx, "SELECT * FROM customers")
+func getall(ctx *gofr.Context) (interface{}, error){
+    var albums []album
+    
+        rows, err := ctx.DB().QueryContext(ctx, "SELECT * FROM album")
         if err != nil {
             return nil, err
         }
 
         for rows.Next() {
-            var customer Customer
-            if err := rows.Scan(&customer.ID, &customer.Name); err != nil {
+            var alb album
+            if err := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err != nil {
                 return nil, err
             }
 
-            customers = append(customers, customer)
+            albums = append(albums, alb)
         }
-
-        // return the customer
-        return customers, nil
+        return albums, nil
 }
 func main() {
     // initialise gofr object
     app := gofr.New()
 
-    app.POST("/customer/delete/{id}",deleteCustomerById)
-    app.POST("/customer/{name}",post)
-    // app.POST("/customer/{name}", func(ctx *gofr.Context) (interface{}, error) {
-    //     name := ctx.PathParam("name")
-
-    //     // Inserting a customer row in database using SQL
-    //     _, err := ctx.DB().ExecContext(ctx, "INSERT INTO customers (name) VALUES (?)", name)
-
-    //     return nil, err
-    // })
-    app.GET("/customer",get)
-
-    app.GET("/customer/{id}",getCustomerBYId)
     
-    // app.GET("/customer", func(ctx *gofr.Context) (interface{}, error) {
-    //     var customers []Customer
+    app.GET("/album/get/{id}",getAlbumById)
 
-    //     // Getting the customer from the database using SQL
-    //     rows, err := ctx.DB().QueryContext(ctx, "SELECT * FROM customers")
-    //     if err != nil {
-    //         return nil, err
-    //     }
-
-    //     for rows.Next() {
-    //         var customer Customer
-    //         if err := rows.Scan(&customer.ID, &customer.Name); err != nil {
-    //             return nil, err
-    //         }
-
-    //         customers = append(customers, customer)
-    //     }
-
-    //     // return the customer
-    //     return customers, nil
-    // })
-
-    // Starts the server, it will listen on the default port 8000.
-    // it can be over-ridden through configs
+    app.POST("/album/delete/{id}",deleteAlbumById)
+    app.POST("/album/{data}",adduser)
+    // app.POST("/customer/update/{id}",updateid)
+    app.GET("/album",getall)
+    
+    
     app.Start()
 }
