@@ -1,4 +1,4 @@
-#Music Album CRUD API
+# Music Album CRUD API
 
 This is a simple CRUD (Create, Read, Update, Delete) API for managing music albums. The API is built in Go using the gofr framework and utilizes a SQLite database for storage.
 Table of Contents
