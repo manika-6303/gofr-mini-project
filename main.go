@@ -74,6 +74,77 @@ func getAlbumById(ctx *gofr.Context) (interface{}, error){
         return ans,nil
 
 }
+func getAlbumByTitle(ctx *gofr.Context) (interface{}, error){
+    t := ctx.PathParam("title")
+    
+    var albums[] album
+    var ans album
+    
+        rows, err1 := ctx.DB().QueryContext(ctx, "SELECT * FROM album")
+        if err1 != nil {
+            return nil, err1
+        }
+
+        for rows.Next() {
+            var alb album
+            if err1 := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err1 != nil {
+                return nil, err1
+            }
+            albums=append(albums,alb)
+        }
+        for _,a := range albums{
+            if a.Title==t{
+                ans=a
+            }
+        }
+        return ans,nil
+
+}
+func getAlbumByArtist(ctx *gofr.Context) (interface{}, error){
+    art := ctx.PathParam("artist")
+    
+    var albums[] album
+    var ans album
+    
+        rows, err1 := ctx.DB().QueryContext(ctx, "SELECT * FROM album")
+        if err1 != nil {
+            return nil, err1
+        }
+
+        for rows.Next() {
+            var alb album
+            if err1 := rows.Scan(&alb.ID, &alb.Title, &alb.Artist, &alb.Price); err1 != nil {
+                return nil, err1
+            }
+            albums=append(albums,alb)
+        }
+        for _,a := range albums{
+            if a.Artist==art{
+                ans=a
+            }
+        }
+        return ans,nil
+
+}
+func updateById(ctx *gofr.Context) (interface{}, error){
+    id:=ctx.PathParam("id")
+    data :=ctx.PathParam("data")
+    data1:=strings.Split(data,",")
+    i,err :=strconv.Atoi(id)
+    var datas[] string
+    for x :=range data1{
+        
+        datas=strings.Split(data1[x],"=")
+        
+        col:=datas[0]
+        val:=datas[1]
+        _, err1 := ctx.DB().ExecContext(ctx, "UPDATE album SET (?)=(?) WHERE id=(?)",col,val,i)
+        if err1 != nil {
+            return nil, err1
+        }
+    }
+    return datas,err
+}
 func getall(ctx *gofr.Context) (interface{}, error){
     var albums []album
     
@@ -97,13 +168,14 @@ func main() {
     app := gofr.New()
 
     
-    app.GET("/album/get/{id}",getAlbumById)
+    app.GET("/album/getid/{id}",getAlbumById)
+    app.GET("/album/gettitle/{title}",getAlbumByTitle)
+    app.GET("/album/getartist/{artist}",getAlbumByArtist)
 
     app.POST("/album/delete/{id}",deleteAlbumById)
     app.POST("/album/{data}",adduser)
-    // app.POST("/customer/update/{id}",updateid)
+    app.POST("/album/updateid/{id}/{data}",updateById)
     app.GET("/album",getall)
-    
     
     app.Start()
 }
